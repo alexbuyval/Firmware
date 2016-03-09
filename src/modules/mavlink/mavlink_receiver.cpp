@@ -226,6 +226,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		handle_message_distance_sensor(msg);
 		break;
 
+    case MAVLINK_MSG_ID_LANDING_TARGET:
+        handle_message_landing_target(msg);
+        break;
+
 	default:
 		break;
 	}
@@ -587,6 +591,34 @@ MavlinkReceiver::handle_message_distance_sensor(mavlink_message_t *msg)
 	} else {
 		orb_publish(ORB_ID(distance_sensor), _distance_sensor_pub, &d);
 	}
+}
+
+void
+MavlinkReceiver::handle_message_landing_target(mavlink_message_t *msg)
+{
+    /* landing target */
+    __mavlink_landing_target_t land_target;
+    mavlink_msg_landing_target_decode(msg, &land_target);
+
+    struct landing_target_s lt;
+    memset(&lt, 0, sizeof(lt));
+
+    lt.timestamp = land_target.time_usec;
+    lt.angle_x = land_target.angle_x;
+    lt.angle_y = land_target.angle_y;
+    lt.distance = land_target.distance;
+    lt.frame = land_target.frame;
+    lt.size_x = land_target.size_x;
+    lt.size_y = land_target.size_y;
+    lt.target_num =land_target.target_num;
+
+    if (_landing_target_pub == nullptr) {
+        _landing_target_pub = orb_advertise_multi(ORB_ID(landing_target), &lt,
+                                     &_orb_class_instance, ORB_PRIO_HIGH);
+
+    } else {
+        orb_publish(ORB_ID(landing_target), _landing_target_pub, &lt);
+    }
 }
 
 void

@@ -1360,6 +1360,14 @@ MulticopterPositionControl::task_main()
 					_vel_sp(2) = _params.land_speed;
 				}
 
+                /* use target landing */
+                if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid
+                    && _pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_TARGETLAND) {
+                    _vel_sp(0) = _pos_sp_triplet.current.vx;
+                    _vel_sp(1) = _pos_sp_triplet.current.vy;
+                    _vel_sp(2) = _pos_sp_triplet.current.vz;
+                }
+
 				/* velocity handling during takeoff */
 				if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid
 				    && _pos_sp_triplet.current.type == position_setpoint_s::SETPOINT_TYPE_TAKEOFF) {

@@ -273,3 +273,6 @@ ORB_DEFINE(camera_trigger, struct camera_trigger_s);
 
 #include "topics/vehicle_command_ack.h"
 ORB_DEFINE(vehicle_command_ack, struct vehicle_command_ack_s);
+
+#include "topics/landing_target.h"
+ORB_DEFINE(landing_target, struct landing_target_s);

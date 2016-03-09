@@ -47,6 +47,11 @@
 #include "navigator_mode.h"
 #include "mission_block.h"
 
+#include <mathlib/mathlib.h>
+
+#include <uORB/topics/landing_target.h>
+#include <uORB/topics/vehicle_attitude.h>
+
 class Land : public MissionBlock
 {
 public:
@@ -60,6 +65,23 @@ public:
 
     virtual void on_active();
 
+private:
+
+    void poll_subscriptions();
+
+    void convert_angles_to_NED();
+
+    void calc_desired_velocity();
+
+    int	_landing_target_sub;			// landing target subscription
+    int _vehicle_att_sub;               // vehicle attitude subscription
+
+    struct landing_target_s _lt;
+    struct vehicle_attitude_s _veh_att;
+
+    math::Vector<3> _vec_to_target_bf;
+    math::Vector<3> _vec_to_target_NED;
+    math::Vector<3> _desired_velocity;
 };
 
 #endif

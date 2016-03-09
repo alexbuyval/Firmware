@@ -491,6 +491,18 @@ struct log_CTS_s {
 	float yaw_rate;
 };
 
+/* --- CONTROL STATE --- */
+#define LOG_LANT_MSG 48
+struct log_LANT_s {
+    float angle_x;
+    float angle_y;
+    float distance;
+    uint8_t frame;
+    float size_x;
+    float size_y;
+    uint8_t target_num;
+};
+
 /* WARNING: ID 46 is already in use for ATTC1 */
 
 /********** SYSTEM MESSAGES, ID > 0x80 **********/
@@ -565,6 +577,7 @@ static const struct log_format_s log_formats[] = {
 	LOG_FORMAT(ENCD, "qfqf",	"cnt0,vel0,cnt1,vel1"),
 	LOG_FORMAT(TSYN, "Q", 		"TimeOffset"),
 	LOG_FORMAT(MACS, "fff", "RRint,PRint,YRint"),
+    LOG_FORMAT(LANT, "fffBffB", "AngleX,AngleY,Dist,Frame,SizeX,SizeY,TN"),
 
 	/* system-level messages, ID >= 0x80 */
 	/* FMT: don't write format of format message, it's useless */

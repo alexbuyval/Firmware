@@ -58,6 +58,10 @@ Land::Land(Navigator *navigator, const char *name) :
 {
     /* load initial params */
     updateParams();
+
+    _landing_target_sub = orb_subscribe(ORB_ID(landing_target));
+    _vehicle_att_sub = orb_subscribe(ORB_ID(vehicle_attitude));
+
 }
 
 Land::~Land()
@@ -97,9 +101,60 @@ Land::on_active()
         _navigator->get_mission_result()->finished = true;
         _navigator->set_mission_result_updated();
         set_idle_item(&_mission_item);
-
         struct position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
         mission_item_to_position_setpoint(&_mission_item, &pos_sp_triplet->current);
         _navigator->set_position_setpoint_triplet_updated();
+    } else {
+        poll_subscriptions();
+        convert_angles_to_NED();
+        calc_desired_velocity();
+        struct position_setpoint_triplet_s *pos_sp_triplet = _navigator->get_position_setpoint_triplet();
+        pos_sp_triplet->current.vx=_desired_velocity(0);
+        pos_sp_triplet->current.vy=_desired_velocity(1);
+        pos_sp_triplet->current.vz=_desired_velocity(3);
+        _navigator->set_position_setpoint_triplet_updated();
     }
+}
+
+void
+Land::poll_subscriptions()
+{
+    bool updated;
+    orb_check(_landing_target_sub, &updated);
+
+    if (updated) {
+        orb_copy(ORB_ID(landing_target), _landing_target_sub, &_lt);
+
+        _vec_to_target_bf(0)=sinf(-_lt.angle_y);
+        _vec_to_target_bf(1)=sinf(_lt.angle_x);
+        _vec_to_target_bf(2)=1.0f;
+    }
+
+    orb_check(_vehicle_att_sub, &updated);
+    if(updated) {
+        orb_copy(ORB_ID(vehicle_attitude), _vehicle_att_sub, &_veh_att);
+    }
+}
+
+void
+Land::convert_angles_to_NED()
+{
+    math::Matrix<3, 3> R;
+    if(_veh_att.R_valid){
+        R.set(_veh_att.R);
+        _vec_to_target_NED = R*_vec_to_target_bf;
+        _vec_to_target_NED.normalize();
+    } else {
+        _vec_to_target_NED.zero();
+    }
+
+
+}
+
+void
+Land::calc_desired_velocity()
+{
+    _desired_velocity(0) = _vec_to_target_NED(0);
+    _desired_velocity(1) = _vec_to_target_NED(1);
+    _desired_velocity(2) = 0.5;
 }
